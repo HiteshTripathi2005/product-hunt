@@ -1,5 +1,6 @@
 import Product from "../models/Product.js";
 import User from "../models/User.js";
+import Upvote from "../models/Upvote.js";
 import uploadImage from "../utils/cloudinaryHelper.js";
 
 export const getProducts = async (req, res) => {
@@ -7,8 +8,12 @@ export const getProducts = async (req, res) => {
     const products = await Product.find({ status: "approved" })
       .populate("submittedBy", "name email avatar")
       .populate({
-        path: "upvotes.user",
-        select: "name avatar",
+        path: "upvotes",
+        select: "user createdAt",
+        populate: {
+          path: "user",
+          select: "name avatar",
+        },
       })
       .sort({ createdAt: -1 }) // Default sort by latest
       .lean();
@@ -36,8 +41,12 @@ export const getProduct = async (req, res) => {
     const product = await Product.findById(id)
       .populate("submittedBy", "name email avatar bio")
       .populate({
-        path: "upvotes.user",
-        select: "name avatar",
+        path: "upvotes",
+        select: "user createdAt",
+        populate: {
+          path: "user",
+          select: "name avatar",
+        },
       })
       .lean();
 
@@ -168,6 +177,10 @@ export const deleteProduct = async (req, res) => {
       });
     }
 
+    // Delete all upvotes associated with this product
+    await Upvote.deleteMany({ product: id });
+
+    // Delete the product
     await Product.findByIdAndDelete(id);
 
     res.status(200).json({
@@ -188,6 +201,7 @@ export const toggleUpvote = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
 
+    // Check if product exists
     const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({
@@ -196,41 +210,57 @@ export const toggleUpvote = async (req, res) => {
       });
     }
 
-    const existingUpvoteIndex = product.upvotes.findIndex(
-      (upvote) => upvote.user.toString() === userId
-    );
+    // Check if user has already upvoted this product
+    const existingUpvote = await Upvote.findOne({
+      user: userId,
+      product: id,
+    });
 
     let message;
-    if (existingUpvoteIndex > -1) {
+    let isUpvoted;
+
+    if (existingUpvote) {
       // Remove upvote
-      product.upvotes.splice(existingUpvoteIndex, 1);
-      message = "Upvote removed successfully";
-    } else {
-      // Add upvote
-      product.upvotes.push({ user: userId });
-      message = "Product upvoted successfully";
-    }
+      await Upvote.findByIdAndDelete(existingUpvote._id);
 
-    await product.save();
-
-    // Return updated product with populated data
-    const updatedProduct = await Product.findById(id)
-      .populate("submittedBy", "name email avatar")
-      .populate({
-        path: "upvotes.user",
-        select: "name avatar",
+      // Decrement upvote count
+      await Product.findByIdAndUpdate(id, {
+        $inc: { upvoteCount: -1 },
       });
 
+      message = "Upvote removed successfully";
+      isUpvoted = false;
+    } else {
+      await Upvote.create({
+        user: userId,
+        product: id,
+      });
+
+      await Product.findByIdAndUpdate(id, {
+        $inc: { upvoteCount: 1 },
+      });
+
+      message = "Product upvoted successfully";
+      isUpvoted = true;
+    } // Return simple response for real-time updates
     res.status(200).json({
       success: true,
       message,
       data: {
-        product: updatedProduct,
-        isUpvoted: existingUpvoteIndex === -1,
+        isUpvoted,
       },
     });
   } catch (error) {
     console.error("Toggle upvote error:", error);
+
+    // Handle duplicate key error (in case of race condition)
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "You have already upvoted this product",
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: "Server error while toggling upvote",
@@ -259,7 +289,6 @@ export const getUserProducts = async (req, res) => {
       .populate("submittedBy", "name email avatar")
       .sort({ createdAt: -1 })
       .lean();
-
     res.status(200).json({
       success: true,
       data: {
@@ -270,6 +299,7 @@ export const getUserProducts = async (req, res) => {
           email: user.email,
           avatar: user.avatar,
           bio: user.bio,
+          createdAt: user.createdAt,
         },
         totalProducts: products.length,
       },
@@ -323,6 +353,60 @@ export const getCategories = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error while fetching categories",
+    });
+  }
+};
+
+export const getUserUpvotedProducts = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Get all upvoted products by the user
+    const upvotes = await Upvote.find({ user: userId })
+      .populate({
+        path: "product",
+        match: { status: "approved" },
+        populate: {
+          path: "submittedBy",
+          select: "name email avatar",
+        },
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Filter out null products (in case some were deleted or not approved)
+    const upvotedProducts = upvotes
+      .filter((upvote) => upvote.product)
+      .map((upvote) => upvote.product);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        products: upvotedProducts,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+          bio: user.bio,
+        },
+        totalProducts: upvotedProducts.length,
+      },
+    });
+  } catch (error) {
+    console.error("Get user upvoted products error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching user upvoted products",
     });
   }
 };

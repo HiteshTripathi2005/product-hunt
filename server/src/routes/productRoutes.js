@@ -6,6 +6,7 @@ import {
   deleteProduct,
   toggleUpvote,
   getUserProducts,
+  getUserUpvotedProducts,
   getCategories,
 } from "../controllers/productController.js";
 import auth from "../middleware/auth.js";
@@ -19,6 +20,8 @@ router.get("/", getProducts);
 router.get("/categories", getCategories);
 
 router.get("/user/:userId", getUserProducts);
+
+router.get("/user/:userId/upvoted", getUserUpvotedProducts);
 
 router.get("/:id", getProduct);
 

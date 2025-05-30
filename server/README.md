@@ -11,6 +11,7 @@
 - **Profile Management** with avatar upload support
 - **Password Hashing** using bcryptjs
 - **Protected Routes** with middleware validation
+- **Admin Authentication System** with separate login and authorization
 
 ### 📦 Product Management
 
@@ -19,7 +20,8 @@
 - **Category-based Organization** with predefined categories
 - **Advanced Filtering & Sorting** capabilities
 - **Product Status Management** (pending/approved/rejected)
-- **Featured Products** system
+- **Admin Product Management** with status updates and deletion
+- **User-specific Product Listings** and upvoted products
 
 ### ⬆️ Upvoting System
 
@@ -27,13 +29,24 @@
 - **Real-time Upvote Count** tracking
 - **User-specific Upvote Status** tracking
 - **Duplicate Prevention** system
+- **User Upvoted Products** tracking and retrieval
 
 ### 💬 Comment System
 
 - **Hierarchical Comments** with replies support
 - **Nested Comment Structure** for better organization
-- **Comment CRUD Operations**
+- **Comment CRUD Operations** with full authentication
 - **User Attribution** for all comments
+- **Product-specific Comment Sections**
+
+### 👑 Admin Dashboard System
+
+- **Separate Admin Authentication** with dedicated middleware
+- **Admin Dashboard Statistics** with comprehensive metrics
+- **User Management** with full user listing and oversight
+- **Product Moderation** with status updates (approve/reject)
+- **Admin Product Deletion** capabilities
+- **Admin Profile Management**
 
 ### 🖼️ File Upload & Storage
 
@@ -41,6 +54,8 @@
 - **Multiple File Format** support (JPEG, PNG, GIF, WebP)
 - **Image Validation** and optimization
 - **Secure File Handling** with proper error management
+- **Avatar Upload** for user profiles
+- **Product Images** with logo and gallery support
 
 ## 📁 Project Architecture
 
@@ -50,29 +65,37 @@ server/
 │   ├── controllers/         # Business logic handlers
 │   │   ├── authController.js     # Authentication operations
 │   │   ├── commentController.js  # Comment management
-│   │   └── productController.js  # Product operations
+│   │   ├── productController.js  # Product operations
+│   │   └── adminController.js    # Admin dashboard operations
 │   ├── middleware/          # Custom middleware functions
 │   │   ├── auth.js              # JWT authentication middleware
+│   │   ├── adminAuth.js         # Admin authentication middleware
 │   │   └── validation.js        # Input validation middleware
 │   ├── models/              # MongoDB data models
 │   │   ├── User.js              # User schema & methods
 │   │   ├── Product.js           # Product schema & methods
-│   │   └── Comment.js           # Comment schema & methods
+│   │   ├── Comment.js           # Comment schema & methods
+│   │   ├── Upvote.js            # Upvote schema & methods
+│   │   └── Admin.js             # Admin schema & methods
 │   ├── routes/              # API route definitions
 │   │   ├── authRoutes.js        # Authentication endpoints
 │   │   ├── productRoutes.js     # Product endpoints
-│   │   └── commentRoutes.js     # Comment endpoints
+│   │   ├── commentRoutes.js     # Comment endpoints
+│   │   └── adminRoutes.js       # Admin dashboard endpoints
 │   ├── utils/               # Utility functions & helpers
 │   │   ├── jwt.js               # JWT token utilities
 │   │   ├── upload.js            # File upload configuration
 │   │   ├── cookieHelper.js      # Cookie management
 │   │   └── cloudinaryHelper.js  # Cloudinary operations
+│   ├── scripts/             # Database seeding and utilities
+│   │   └── seedAdmin.js         # Admin user seeding script
 │   ├── db/
 │   │   └── connectDB.js         # MongoDB connection setup
 │   ├── app.js               # Express application setup
 │   └── index.js             # Server entry point
 ├── public/                  # Static file serving directory
 ├── .env                     # Environment variables
+├── .env.example             # Environment variables template
 ├── package.json
 └── README.md
 ```
@@ -105,25 +128,33 @@ server/
 
 3. **Environment Configuration**
 
-   Create a `.env` file in the server root directory:
+   Create a `.env` file in the server root directory: ```env
 
-   ```env
    # Database Configuration
+
    MONGODB_URL=mongodb+srv://username:password@cluster.mongodb.net/kulp-product-hunt
 
    # JWT Configuration
+
    JWT_SECRET=your_super_secure_jwt_secret_key_minimum_32_characters
    JWT_EXPIRE=7d
 
+   # Cookie Configuration (Optional)
+
+   COOKIE_EXPIRE=7
+
    # Server Configuration
+
    NODE_ENV=development
    PORT=3000
    FRONTEND_URL=http://localhost:3000
 
    # Cloudinary Configuration (Required for image uploads)
+
    CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
    CLOUDINARY_API_KEY=your_cloudinary_api_key
    CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
    ```
 
    **🔐 Getting Cloudinary Credentials:**
@@ -132,6 +163,8 @@ server/
    2. Navigate to Dashboard
    3. Copy Cloud Name, API Key, and API Secret
    4. Add them to your `.env` file
+
+   ```
 
 4. **Database Setup**
 
@@ -171,7 +204,8 @@ Expected response:
   "endpoints": {
     "auth": "/api/auth",
     "products": "/api/products",
-    "comments": "/api/comments"
+    "comments": "/api/comments",
+    "admin": "/api/admin"
   }
 }
 ```
@@ -686,6 +720,59 @@ GET /api/products/user/507f1f77bcf86cd799439012
 
 ---
 
+### ⬆️ Get User's Upvoted Products
+
+**Endpoint:** `GET /api/products/user/:userId/upvoted`  
+**Authentication:** Not required
+
+**📝 Example Request:**
+
+```bash
+GET /api/products/user/507f1f77bcf86cd799439012/upvoted
+```
+
+**📥 Success Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "products": [
+      {
+        "_id": "507f1f77bcf86cd799439011",
+        "name": "AI Writing Assistant",
+        "tagline": "Write better content with AI",
+        "description": "An AI-powered writing tool...",
+        "websiteUrl": "https://aiwritingassistant.com",
+        "logo": "https://res.cloudinary.com/xxx/image/upload/logo.jpg",
+        "images": ["https://res.cloudinary.com/xxx/image/upload/img1.jpg"],
+        "category": "AI",
+        "submittedBy": {
+          "_id": "507f1f77bcf86cd799439013",
+          "name": "Alice Johnson",
+          "email": "alice@example.com",
+          "avatar": "https://res.cloudinary.com/xxx/image/upload/alice.jpg"
+        },
+        "upvoteCount": 25,
+        "featured": false,
+        "status": "approved",
+        "createdAt": "2024-01-10T09:00:00.000Z"
+      }
+    ],
+    "user": {
+      "id": "507f1f77bcf86cd799439012",
+      "name": "Jane Smith",
+      "email": "jane@example.com",
+      "avatar": "https://res.cloudinary.com/xxx/image/upload/avatar.jpg",
+      "bio": "AI enthusiast and entrepreneur"
+    },
+    "totalProducts": 12
+  }
+}
+```
+
+---
+
 ### 📂 Get Product Categories
 
 **Endpoint:** `GET /api/products/categories`  
@@ -913,6 +1000,319 @@ GET /api/comments/user/507f1f77bcf86cd799439013
 
 ---
 
+## 👑 Admin API
+
+### 🔑 Admin Login
+
+**Endpoint:** `POST /api/admin/login`  
+**Content-Type:** `application/json`  
+**Authentication:** Not required
+
+**📤 Request Body:**
+
+```json
+{
+  "email": "admin@gmail.com", // Required: Admin email
+  "password": "admin@gmail.com" // Required: Admin password
+}
+```
+
+**📥 Success Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Admin login successful",
+  "data": {
+    "admin": {
+      "id": "507f1f77bcf86cd799439030",
+      "email": "admin@gmail.com",
+      "role": "admin"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
+**📝 Example cURL:**
+
+```bash
+curl -X POST http://localhost:3000/api/admin/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@gmail.com",
+    "password": "admin@gmail.com"
+  }'
+```
+
+---
+
+### 👤 Get Admin Profile
+
+**Endpoint:** `GET /api/admin/profile`  
+**Authentication:** Required (Admin JWT Token)
+
+**📤 Request Headers:**
+
+```
+Authorization: Bearer <admin_jwt_token>
+```
+
+**📥 Success Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "admin": {
+      "id": "507f1f77bcf86cd799439030",
+      "email": "admin@gmail.com",
+      "role": "admin"
+    }
+  }
+}
+```
+
+---
+
+### 🚪 Admin Logout
+
+**Endpoint:** `POST /api/admin/logout`  
+**Authentication:** Required (Admin JWT Token)
+
+**📥 Success Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Admin logged out successfully"
+}
+```
+
+---
+
+### 📊 Get Dashboard Statistics
+
+**Endpoint:** `GET /api/admin/dashboard/stats`  
+**Authentication:** Required (Admin JWT Token)
+
+**📥 Success Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "stats": {
+      "totalUsers": 150,
+      "totalProducts": 75,
+      "pendingProducts": 8,
+      "approvedProducts": 62,
+      "rejectedProducts": 5,
+      "newUsers": 12, // Last 7 days
+      "newProducts": 6 // Last 7 days
+    }
+  }
+}
+```
+
+---
+
+### 👥 Get All Users (Admin)
+
+**Endpoint:** `GET /api/admin/users`  
+**Authentication:** Required (Admin JWT Token)
+
+**📤 Query Parameters:**
+
+```
+page     (optional): Page number (default: 1)
+limit    (optional): Items per page (default: 20)
+search   (optional): Search in name or email
+```
+
+**📝 Example Requests:**
+
+```bash
+# Get all users with pagination
+GET /api/admin/users?page=1&limit=20
+
+# Search users
+GET /api/admin/users?search=john&page=1
+```
+
+**📥 Success Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "users": [
+      {
+        "_id": "507f1f77bcf86cd799439012",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "avatar": "https://res.cloudinary.com/xxx/image/upload/avatar.jpg",
+        "bio": "Full-stack developer",
+        "createdAt": "2024-01-10T09:00:00.000Z",
+        "updatedAt": "2024-01-15T10:30:00.000Z"
+      }
+    ],
+    "pagination": {
+      "currentPage": 1,
+      "totalPages": 8,
+      "totalUsers": 150,
+      "hasNextPage": true,
+      "hasPrevPage": false
+    }
+  }
+}
+```
+
+---
+
+### 📦 Get All Products (Admin)
+
+**Endpoint:** `GET /api/admin/products`  
+**Authentication:** Required (Admin JWT Token)
+
+**📤 Query Parameters:**
+
+```
+page      (optional): Page number (default: 1)
+limit     (optional): Items per page (default: 20)
+search    (optional): Search in name, tagline, or description
+status    (optional): pending | approved | rejected
+category  (optional): Product category filter
+```
+
+**📝 Example Requests:**
+
+```bash
+# Get pending products
+GET /api/admin/products?status=pending
+
+# Search products with pagination
+GET /api/admin/products?search=AI&page=1&limit=10
+
+# Filter by category and status
+GET /api/admin/products?category=AI&status=approved
+```
+
+**📥 Success Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "products": [
+      {
+        "_id": "507f1f77bcf86cd799439011",
+        "name": "AI Writing Assistant",
+        "tagline": "Write better content with AI",
+        "description": "An AI-powered writing tool...",
+        "websiteUrl": "https://aiwritingassistant.com",
+        "logo": "https://res.cloudinary.com/xxx/image/upload/logo.jpg",
+        "images": ["https://res.cloudinary.com/xxx/image/upload/img1.jpg"],
+        "category": "AI",
+        "submittedBy": {
+          "_id": "507f1f77bcf86cd799439012",
+          "name": "Jane Smith",
+          "email": "jane@example.com",
+          "avatar": "https://res.cloudinary.com/xxx/image/upload/avatar.jpg"
+        },
+        "upvoteCount": 15,
+        "featured": false,
+        "status": "pending",
+        "createdAt": "2024-01-15T09:00:00.000Z",
+        "updatedAt": "2024-01-15T09:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "currentPage": 1,
+      "totalPages": 4,
+      "totalProducts": 75,
+      "hasNextPage": true,
+      "hasPrevPage": false
+    }
+  }
+}
+```
+
+---
+
+### ✅ Update Product Status
+
+**Endpoint:** `PUT /api/admin/products/:id/status`  
+**Content-Type:** `application/json`  
+**Authentication:** Required (Admin JWT Token)
+
+**📤 Request Body:**
+
+```json
+{
+  "status": "approved" // Required: "approved" | "rejected" | "pending"
+}
+```
+
+**📝 Example cURL:**
+
+```bash
+curl -X PUT http://localhost:3000/api/admin/products/507f1f77bcf86cd799439011/status \
+  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "approved"
+  }'
+```
+
+**📥 Success Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Product approved successfully",
+  "data": {
+    "product": {
+      "_id": "507f1f77bcf86cd799439011",
+      "name": "AI Writing Assistant",
+      "status": "approved",
+      "submittedBy": {
+        "_id": "507f1f77bcf86cd799439012",
+        "name": "Jane Smith",
+        "email": "jane@example.com",
+        "avatar": "https://res.cloudinary.com/xxx/image/upload/avatar.jpg"
+      }
+      // ... other product fields
+    }
+  }
+}
+```
+
+---
+
+### 🗑️ Delete Product (Admin)
+
+**Endpoint:** `DELETE /api/admin/products/:id`  
+**Authentication:** Required (Admin JWT Token)
+
+**📝 Example cURL:**
+
+```bash
+curl -X DELETE http://localhost:3000/api/admin/products/507f1f77bcf86cd799439011 \
+  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN"
+```
+
+**📥 Success Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Product deleted successfully"
+}
+```
+
+---
+
 ## 🗄️ Database Schema Documentation
 
 ### 👤 User Model
@@ -1110,6 +1510,51 @@ GET /api/comments/user/507f1f77bcf86cd799439013
 
 ---
 
+### 👑 Admin Model
+
+```javascript
+{
+  _id: ObjectId,                          // Auto-generated MongoDB ID
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true
+  },
+  password: {
+    type: String,
+    required: true,
+    // Hashed using bcryptjs with salt rounds: 12
+  },
+  role: {
+    type: String,
+    default: "admin",
+    immutable: true
+    // Cannot be changed after creation
+  },
+  createdAt: Date,                        // Auto-generated timestamp
+  updatedAt: Date                         // Auto-updated timestamp
+}
+```
+
+**Indexes:**
+
+- `email`: Unique index for faster lookup and duplicate prevention
+
+**Methods:**
+
+- `comparePassword(candidatePassword)`: Compare plain text password with hashed password
+- `pre('save')`: Automatically hash password before saving to database
+
+**Security Features:**
+
+- Higher salt rounds (12) for enhanced security
+- Immutable role field to prevent privilege escalation
+- Separate authentication system from regular users
+- Dedicated admin authentication middleware
+
+---
+
 ## 🔐 Authentication & Security
 
 ### 🔑 JWT Token Management
@@ -1140,9 +1585,17 @@ GET /api/comments/user/507f1f77bcf86cd799439013
 
 **Password Security:**
 
-- Minimum 6 characters requirement
-- bcryptjs hashing with salt rounds: 10
+- Minimum 6 characters requirement for users
+- bcryptjs hashing with salt rounds: 10 (users) / 12 (admins)
 - Passwords never returned in API responses
+- Admin passwords use higher salt rounds for enhanced security
+
+**Authentication Security:**
+
+- Separate authentication systems for users and admins
+- Dual token support: cookies (primary) and Authorization headers
+- Admin-specific JWT tokens with dedicated middleware
+- Immutable admin roles to prevent privilege escalation
 
 **Input Validation:**
 
@@ -1150,6 +1603,13 @@ GET /api/comments/user/507f1f77bcf86cd799439013
 - MongoDB injection prevention
 - XSS protection through input sanitization
 - File upload restrictions (type, size, quantity)
+
+**Authorization Controls:**
+
+- Role-based access control (RBAC) for admin functions
+- Product ownership verification for user operations
+- Admin-only endpoints protected by dedicated middleware
+- Separate authentication tokens for user and admin sessions
 
 **CORS Configuration:**
 
@@ -1218,6 +1678,7 @@ MONGODB_URL=mongodb+srv://user:pass@cluster.mongodb.net/kulp-prod
 # Security (Use strong, unique values)
 JWT_SECRET=super_secure_64_character_random_string_for_production_use
 JWT_EXPIRE=7d
+COOKIE_EXPIRE=7
 
 # Frontend (Your actual domain)
 FRONTEND_URL=https://your-domain.com
@@ -1275,6 +1736,9 @@ npm start
 
 # Install dependencies
 npm install
+
+# Seed admin user (creates admin@gmail.com with password: admin@gmail.com)
+npm run seed:admin
 ```
 
 ### 🔧 Development Tools

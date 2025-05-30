@@ -30,8 +30,6 @@ export const register = async (req, res) => {
   try {
     const { name, email, password, bio } = req.body;
     const avatar = req.file ? req.file.path : null;
-    console.log("Avatar path:", avatar);
-    console.log("Request body:", req.body);
     if (!avatar) {
       return res.status(400).json({
         success: false,
@@ -40,6 +38,7 @@ export const register = async (req, res) => {
     }
 
     if (!name || !email || !password) {
+      fs.unlinkSync(avatar);
       return res.status(400).json({
         success: false,
         message: "Please provide name, email, and password",
@@ -47,6 +46,7 @@ export const register = async (req, res) => {
     }
 
     if (password.length < 6) {
+      fs.unlinkSync(avatar);
       return res.status(400).json({
         success: false,
         message: "Password must be at least 6 characters long",
