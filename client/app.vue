@@ -1,7 +1,5 @@
 <template>
   <div>
-    <AppLoader v-if="!isInitialized" />
-
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
@@ -9,5 +7,5 @@
 </template>
 
 <script setup>
-const { isInitialized } = useAuth();
+// Remove the dependency on isInitialized in app.vue to prevent hydration mismatch
 </script>

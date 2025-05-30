@@ -32,8 +32,6 @@ export const useAuth = () => {
         user.value = response.data.user;
       }
 
-      console.log("✅ Login successful!", response);
-
       // Redirect to home page
       if (typeof navigateTo !== "undefined") {
         await navigateTo("/");
@@ -41,7 +39,7 @@ export const useAuth = () => {
 
       return response;
     } catch (err) {
-      console.error("❌ Login error:", err);
+      console.error("Login error:", err);
       // Set error message for UI
       error.value =
         err.data?.message || err.message || "Login failed. Please try again.";
@@ -87,8 +85,6 @@ export const useAuth = () => {
         user.value = response.data.user;
       }
 
-      console.log("Registration successful!", response);
-
       // Redirect to home page
       if (typeof navigateTo !== "undefined") {
         await navigateTo("/");
@@ -96,7 +92,7 @@ export const useAuth = () => {
 
       return response;
     } catch (err) {
-      console.error("❌ Registration error:", err);
+      console.error("Registration error:", err);
       // Set error message for UI
       error.value =
         err.data?.message ||
@@ -127,7 +123,7 @@ export const useAuth = () => {
 
       return response;
     } catch (err) {
-      console.error("❌ Logout error:", err);
+      console.error("Logout error:", err);
       // Clear user state even if API call fails
       user.value = null;
       throw err;
@@ -150,7 +146,6 @@ export const useAuth = () => {
       if (response.success && response.data.user) {
         user.value = response.data.user;
       }
-      console.log(response.data.user);
       return response;
     } catch (err) {
       console.error("Get current user error:", err);

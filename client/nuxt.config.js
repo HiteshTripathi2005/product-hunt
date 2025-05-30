@@ -13,6 +13,9 @@ export default defineNuxtConfig({
     },
   },
 
+  // SSR configuration to prevent hydration mismatches
+  ssr: true,
+
   vite: {
     plugins: [tailwindcss()],
   },

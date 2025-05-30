@@ -42,32 +42,33 @@
         {{ comment.content }}
       </p>
     </div>
-
     <!-- Comment Actions -->
     <div class="flex items-center gap-4">
       <!-- Reply Button (only for authenticated users and top-level comments) -->
-      <Button
-        v-if="isAuthenticated && !comment.parentComment"
-        variant="ghost"
-        size="sm"
-        @click="toggleReplyForm"
-        class="text-muted-foreground hover:text-foreground p-0 h-auto"
-      >
-        <svg
-          class="w-4 h-4 mr-1"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      <ClientOnly>
+        <Button
+          v-if="isAuthenticated && !comment.parentComment"
+          variant="ghost"
+          size="sm"
+          @click="toggleReplyForm"
+          class="text-muted-foreground hover:text-foreground p-0 h-auto"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
-          />
-        </svg>
-        Reply
-      </Button>
+          <svg
+            class="w-4 h-4 mr-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+            />
+          </svg>
+          Reply
+        </Button>
+      </ClientOnly>
 
       <!-- Reply Count (for top-level comments with replies) -->
       <span

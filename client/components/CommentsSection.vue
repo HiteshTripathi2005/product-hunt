@@ -13,42 +13,73 @@
       </h2>
     </div>
 
-    <!-- Comment Form (for authenticated users only) -->
-    <div v-if="isAuthenticated" class="mb-6">
-      <CommentForm
-        :product-id="productId"
-        @comment-added="handleCommentAdded"
-      />
-    </div>
-
-    <!-- Login Prompt (for guest users) -->
-    <div v-else class="mb-6 p-4 border border-border rounded-lg bg-muted/30">
-      <div class="flex items-center gap-3">
-        <svg
-          class="w-5 h-5 text-muted-foreground"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.118 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.118-8 9-8s9 3.582 9 8z"
-          />
-        </svg>
-        <span class="text-sm text-muted-foreground">
-          <Button
-            variant="link"
-            class="p-0 h-auto text-primary"
-            @click="navigateTo('/login')"
-          >
-            Login
-          </Button>
-          to join the conversation
-        </span>
+    <ClientOnly>
+      <!-- Comment Form (for authenticated users only) -->
+      <div v-if="isAuthenticated" class="mb-6">
+        <CommentForm
+          :product-id="productId"
+          @comment-added="handleCommentAdded"
+        />
       </div>
-    </div>
+
+      <!-- Login Prompt (for guest users) -->
+      <div v-else class="mb-6 p-4 border border-border rounded-lg bg-muted/30">
+        <div class="flex items-center gap-3">
+          <svg
+            class="w-5 h-5 text-muted-foreground"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.118 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.118-8 9-8s9 3.582 9 8z"
+            />
+          </svg>
+          <span class="text-sm text-muted-foreground">
+            <Button
+              variant="link"
+              class="p-0 h-auto text-primary"
+              @click="navigateTo('/login')"
+            >
+              Login
+            </Button>
+            to join the conversation
+          </span>
+        </div>
+      </div>
+      <template #fallback>
+        <div class="mb-6 p-4 border border-border rounded-lg bg-muted/30">
+          <div class="flex items-center gap-3">
+            <svg
+              class="w-5 h-5 text-muted-foreground"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.118 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.118-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+            <span class="text-sm text-muted-foreground">
+              <Button
+                variant="link"
+                class="p-0 h-auto text-primary"
+                @click="navigateTo('/login')"
+              >
+                Login
+              </Button>
+              to join the conversation
+            </span>
+          </div>
+        </div>
+      </template>
+    </ClientOnly>
 
     <!-- Loading State -->
     <div v-if="isLoading" class="space-y-4">
@@ -97,7 +128,12 @@
         />
       </svg>
       <p class="text-muted-foreground">
-        {{ isAuthenticated ? "Be the first to comment!" : "No comments yet." }}
+        <ClientOnly>
+          {{
+            isAuthenticated ? "Be the first to comment!" : "No comments yet."
+          }}
+          <template #fallback> No comments yet. </template>
+        </ClientOnly>
       </p>
     </div>
   </div>

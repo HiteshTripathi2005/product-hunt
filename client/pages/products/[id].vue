@@ -63,59 +63,88 @@
             </div>
             <!-- Upvote Button -->
             <div class="flex-shrink-0">
-              <button
-                @click="handleUpvote"
-                class="flex flex-col items-center space-y-1 p-3 rounded-lg border transition-all duration-200"
-                :class="[
-                  !isAuthenticated
-                    ? 'opacity-70 cursor-pointer border-border bg-gray-50 dark:bg-gray-800 hover:opacity-80'
-                    : isUpvoted
-                    ? 'bg-green-50 border-green-200 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:hover:bg-green-900/30'
-                    : 'hover:bg-primary/10 border-border',
-                ]"
-                :title="
-                  !isAuthenticated
-                    ? 'Login to upvote this product'
-                    : isUpvoted
-                    ? 'Remove upvote'
-                    : 'Upvote this product'
-                "
-              >
-                <!-- Upvote Icon -->
-                <svg
-                  class="w-6 h-6 transition-colors"
-                  :class="
+              <ClientOnly>
+                <button
+                  @click="handleUpvote"
+                  class="flex flex-col items-center space-y-1 p-3 rounded-lg border transition-all duration-200"
+                  :class="[
                     !isAuthenticated
-                      ? 'text-gray-400'
+                      ? 'opacity-70 cursor-pointer border-border bg-gray-50 dark:bg-gray-800 hover:opacity-80'
                       : isUpvoted
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-muted-foreground'
-                  "
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M5 15l7-7 7 7"
-                  />
-                </svg>
-                <!-- Upvote Count -->
-                <span
-                  class="text-sm font-medium transition-colors"
-                  :class="
+                      ? 'bg-green-50 border-green-200 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:hover:bg-green-900/30'
+                      : 'hover:bg-primary/10 border-border',
+                  ]"
+                  :title="
                     !isAuthenticated
-                      ? 'text-gray-400'
+                      ? 'Login to upvote this product'
                       : isUpvoted
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-muted-foreground'
+                      ? 'Remove upvote'
+                      : 'Upvote this product'
                   "
                 >
-                  {{ product.upvoteCount || 0 }}
-                </span>
-              </button>
+                  <!-- Upvote Icon -->
+                  <svg
+                    class="w-6 h-6 transition-colors"
+                    :class="
+                      !isAuthenticated
+                        ? 'text-gray-400'
+                        : isUpvoted
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-muted-foreground'
+                    "
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 15l7-7 7 7"
+                    />
+                  </svg>
+                  <!-- Upvote Count -->
+                  <span
+                    class="text-sm font-medium transition-colors"
+                    :class="
+                      !isAuthenticated
+                        ? 'text-gray-400'
+                        : isUpvoted
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-muted-foreground'
+                    "
+                  >
+                    {{ product.upvoteCount || 0 }}
+                  </span>
+                </button>
+                <template #fallback>
+                  <button
+                    class="flex flex-col items-center space-y-1 p-3 rounded-lg border transition-all duration-200 opacity-70 cursor-pointer border-border bg-gray-50 dark:bg-gray-800"
+                    title="Loading..."
+                  >
+                    <!-- Upvote Icon -->
+                    <svg
+                      class="w-6 h-6 transition-colors text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M5 15l7-7 7 7"
+                      />
+                    </svg>
+                    <!-- Upvote Count -->
+                    <span
+                      class="text-sm font-medium transition-colors text-gray-400"
+                    >
+                      {{ product.upvoteCount || 0 }}
+                    </span>
+                  </button>
+                </template>
+              </ClientOnly>
             </div>
           </div>
 
