@@ -1,3 +1,9 @@
+PRODUCT HUNT CLONE
+==================================
+
+🌐 Website: https://product-hunt-webapp.vercel.app/
+📱 GitHub: https://github.com/HiteshTripathi2005/product-hunt
+
 DEVELOPMENT STATUS REPORT
 =========================
 
@@ -9,7 +15,7 @@ FULLY COMPLETED (PRODUCTION READY)
    - JWT token security
 
 ✅ Product Management
-   - Create, edit, delete products
+   - Create products
    - Multi-image upload
    - Categories and validation
 
