@@ -94,6 +94,7 @@ definePageMeta({
 // Use composables
 const { login, isLoading, error, clearError } = useAuth();
 const { form: loginForm, resetForm } = useLoginForm();
+const route = useRoute();
 
 // Handle login form submission
 const handleLogin = async () => {
@@ -101,6 +102,16 @@ const handleLogin = async () => {
     clearError();
     await login(loginForm);
     resetForm();
+
+    // Check if there's a redirect parameter
+    const redirectTo = route.query.redirect;
+    if (redirectTo && typeof redirectTo === "string") {
+      // Redirect to the intended destination
+      await navigateTo(decodeURIComponent(redirectTo));
+    } else {
+      // Default redirect to home
+      await navigateTo("/");
+    }
   } catch (err) {
     // Error is handled by the composable
     console.error("Login failed:", err);

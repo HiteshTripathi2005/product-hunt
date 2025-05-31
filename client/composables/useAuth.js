@@ -32,11 +32,9 @@ export const useAuth = () => {
         user.value = response.data.user;
       }
 
-      // Redirect to home page
-      if (typeof navigateTo !== "undefined") {
-        await navigateTo("/");
-      }
+      console.log("✅ Login successful!", response);
 
+      // Don't automatically redirect - let the caller handle it
       return response;
     } catch (err) {
       console.error("Login error:", err);
