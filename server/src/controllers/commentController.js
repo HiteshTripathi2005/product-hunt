@@ -5,7 +5,6 @@ export const getProductComments = async (req, res) => {
   try {
     const { productId } = req.params;
 
-    // Check if product exists
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({
@@ -130,7 +129,6 @@ export const getUserComments = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Get user's comments
     const comments = await Comment.find({ author: userId })
       .populate("author", "name email avatar")
       .populate("product", "name logo")

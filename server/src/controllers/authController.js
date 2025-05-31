@@ -3,7 +3,6 @@ import fs from "fs";
 import uploadImage from "../utils/cloudinaryHelper.js";
 import { generateCookie, clearCookie } from "../utils/cookieHelper.js";
 
-// Helper function to set auth cookie and send response
 const sendTokenResponse = (user, statusCode, res, message) => {
   const { token, cookieOptions } = generateCookie(user._id);
 

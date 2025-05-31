@@ -1,9 +1,9 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import { verifyToken } from "../utils/jwt.js";
 
 const auth = async (req, res, next) => {
   try {
-    // Check for token in Authorization header OR cookies
     let token =
       req.header("Authorization")?.replace("Bearer ", "") || req.cookies.token;
 
@@ -14,7 +14,7 @@ const auth = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = verifyToken(token);
     const user = await User.findById(decoded.id).select("-password");
 
     if (!user) {

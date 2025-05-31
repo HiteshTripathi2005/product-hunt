@@ -19,7 +19,6 @@ const upvoteSchema = new mongoose.Schema(
 );
 
 upvoteSchema.index({ user: 1, product: 1 }, { unique: true });
-
 upvoteSchema.index({ product: 1 });
 upvoteSchema.index({ user: 1 });
 upvoteSchema.index({ createdAt: -1 });

@@ -1,9 +1,7 @@
-// Validation rules for different endpoints
 export const validateRegister = (req, res, next) => {
   const { name, email, password } = req.body;
   const errors = [];
 
-  // Name validation
   if (!name || name.trim().length < 2) {
     errors.push("Name must be at least 2 characters long");
   }
@@ -11,13 +9,11 @@ export const validateRegister = (req, res, next) => {
     errors.push("Name must be less than 50 characters");
   }
 
-  // Email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!email || !emailRegex.test(email)) {
     errors.push("Please provide a valid email address");
   }
 
-  // Password validation
   if (!password || password.length < 6) {
     errors.push("Password must be at least 6 characters long");
   }
@@ -40,7 +36,6 @@ export const validateProduct = (req, res, next) => {
   const { name, tagline, description, websiteUrl, category } = req.body;
   const errors = [];
 
-  // Name validation
   if (!name || name.trim().length < 2) {
     errors.push("Product name must be at least 2 characters long");
   }
@@ -48,7 +43,6 @@ export const validateProduct = (req, res, next) => {
     errors.push("Product name must be less than 100 characters");
   }
 
-  // Tagline validation
   if (!tagline || tagline.trim().length < 5) {
     errors.push("Tagline must be at least 5 characters long");
   }
@@ -56,7 +50,6 @@ export const validateProduct = (req, res, next) => {
     errors.push("Tagline must be less than 200 characters");
   }
 
-  // Description validation
   if (!description || description.trim().length < 10) {
     errors.push("Description must be at least 10 characters long");
   }
@@ -64,7 +57,6 @@ export const validateProduct = (req, res, next) => {
     errors.push("Description must be less than 1000 characters");
   }
 
-  // Category validation
   const validCategories = [
     "AI",
     "SaaS",
@@ -97,7 +89,6 @@ export const validateComment = (req, res, next) => {
   const { content, productId } = req.body;
   const errors = [];
 
-  // Content validation
   if (!content || content.trim().length < 1) {
     errors.push("Comment content cannot be empty");
   }
@@ -105,7 +96,6 @@ export const validateComment = (req, res, next) => {
     errors.push("Comment must be less than 500 characters");
   }
 
-  // Product ID validation
   if (!productId) {
     errors.push("Product ID is required");
   }

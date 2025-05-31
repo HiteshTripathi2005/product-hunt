@@ -3,7 +3,6 @@ import User from "../models/User.js";
 import Product from "../models/Product.js";
 import { generateCookie, clearCookie } from "../utils/cookieHelper.js";
 
-// Helper function to set auth cookie and send response
 const sendTokenResponse = (admin, statusCode, res, message) => {
   const { token, cookieOptions } = generateCookie(admin._id);
 
@@ -24,7 +23,6 @@ const sendTokenResponse = (admin, statusCode, res, message) => {
     });
 };
 
-// Admin login
 export const adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -36,7 +34,6 @@ export const adminLogin = async (req, res) => {
       });
     }
 
-    // Check if admin exists
     const admin = await Admin.findOne({ email });
     if (!admin) {
       return res.status(401).json({
@@ -45,7 +42,6 @@ export const adminLogin = async (req, res) => {
       });
     }
 
-    // Check password
     const isPasswordCorrect = await admin.comparePassword(password);
     if (!isPasswordCorrect) {
       return res.status(401).json({
@@ -64,7 +60,6 @@ export const adminLogin = async (req, res) => {
   }
 };
 
-// Get admin profile
 export const getAdminProfile = async (req, res) => {
   try {
     const admin = req.user;
@@ -94,7 +89,6 @@ export const getAdminProfile = async (req, res) => {
   }
 };
 
-// Admin logout
 export const adminLogout = async (req, res) => {
   try {
     const cookieOptions = clearCookie();
@@ -112,44 +106,17 @@ export const adminLogout = async (req, res) => {
   }
 };
 
-// Get all users for admin
 export const getAllUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 20, search } = req.query;
-    const skip = (page - 1) * limit;
-
-    // Build search query
-    let query = {};
-    if (search) {
-      query = {
-        $or: [
-          { name: { $regex: search, $options: "i" } },
-          { email: { $regex: search, $options: "i" } },
-        ],
-      };
-    }
-
-    // Get users with pagination
-    const users = await User.find(query)
+    const users = await User.find({})
       .select("-password")
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit))
       .lean();
-
-    const totalUsers = await User.countDocuments(query);
 
     res.status(200).json({
       success: true,
       data: {
         users,
-        pagination: {
-          currentPage: parseInt(page),
-          totalPages: Math.ceil(totalUsers / limit),
-          totalUsers,
-          hasNextPage: page * limit < totalUsers,
-          hasPrevPage: page > 1,
-        },
       },
     });
   } catch (error) {
@@ -161,52 +128,17 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-// Get all products for admin
 export const getAllProducts = async (req, res) => {
   try {
-    const { page = 1, limit = 20, search, status, category } = req.query;
-    const skip = (page - 1) * limit;
-
-    // Build search query
-    let query = {};
-
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { tagline: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-      ];
-    }
-
-    if (status) {
-      query.status = status;
-    }
-
-    if (category) {
-      query.category = category;
-    }
-
-    // Get products with pagination
-    const products = await Product.find(query)
+    const products = await Product.find({})
       .populate("submittedBy", "name email avatar")
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit))
       .lean();
-
-    const totalProducts = await Product.countDocuments(query);
 
     res.status(200).json({
       success: true,
       data: {
         products,
-        pagination: {
-          currentPage: parseInt(page),
-          totalPages: Math.ceil(totalProducts / limit),
-          totalProducts,
-          hasNextPage: page * limit < totalProducts,
-          hasPrevPage: page > 1,
-        },
       },
     });
   } catch (error) {
@@ -218,7 +150,6 @@ export const getAllProducts = async (req, res) => {
   }
 };
 
-// Update product status (approve/reject)
 export const updateProductStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -258,7 +189,6 @@ export const updateProductStatus = async (req, res) => {
   }
 };
 
-// Delete product (admin)
 export const deleteProductAdmin = async (req, res) => {
   try {
     const { id } = req.params;
@@ -271,7 +201,6 @@ export const deleteProductAdmin = async (req, res) => {
       });
     }
 
-    // Delete the product
     await Product.findByIdAndDelete(id);
 
     res.status(200).json({
@@ -287,10 +216,8 @@ export const deleteProductAdmin = async (req, res) => {
   }
 };
 
-// Get dashboard stats
 export const getDashboardStats = async (req, res) => {
   try {
-    // Get total counts
     const totalUsers = await User.countDocuments();
     const totalProducts = await Product.countDocuments();
     const pendingProducts = await Product.countDocuments({ status: "pending" });
@@ -299,18 +226,6 @@ export const getDashboardStats = async (req, res) => {
     });
     const rejectedProducts = await Product.countDocuments({
       status: "rejected",
-    });
-
-    // Get recent users (last 7 days)
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const newUsers = await User.countDocuments({
-      createdAt: { $gte: sevenDaysAgo },
-    });
-
-    // Get recent products (last 7 days)
-    const newProducts = await Product.countDocuments({
-      createdAt: { $gte: sevenDaysAgo },
     });
 
     res.status(200).json({
@@ -323,7 +238,6 @@ export const getDashboardStats = async (req, res) => {
           approvedProducts,
           rejectedProducts,
           newUsers,
-          newProducts,
         },
       },
     });

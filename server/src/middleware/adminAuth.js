@@ -1,19 +1,12 @@
-import jwt from "jsonwebtoken";
 import Admin from "../models/Admin.js";
+import { verifyToken } from "../utils/jwt.js";
 
 const adminAuth = async (req, res, next) => {
   try {
     let token = null;
-
-    // Get token from cookie or Authorization header
-    if (req.cookies.adminToken) {
-      token = req.cookies.adminToken;
-    } else if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
-    ) {
-      token = req.headers.authorization.split(" ")[1];
-    }
+    token =
+      req.header("Authorization")?.replace("Bearer ", "") ||
+      req.cookies.adminToken;
 
     if (!token) {
       return res.status(401).json({
@@ -23,10 +16,8 @@ const adminAuth = async (req, res, next) => {
     }
 
     try {
-      // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = verifyToken(token);
 
-      // Get admin from database
       const admin = await Admin.findById(decoded.id).select("-password");
 
       if (!admin) {
@@ -36,7 +27,6 @@ const adminAuth = async (req, res, next) => {
         });
       }
 
-      // Add admin to request object
       req.user = admin;
       next();
     } catch (jwtError) {

@@ -201,7 +201,6 @@ export const toggleUpvote = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
 
-    // Check if product exists
     const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({
@@ -210,7 +209,6 @@ export const toggleUpvote = async (req, res) => {
       });
     }
 
-    // Check if user has already upvoted this product
     const existingUpvote = await Upvote.findOne({
       user: userId,
       product: id,
@@ -220,10 +218,8 @@ export const toggleUpvote = async (req, res) => {
     let isUpvoted;
 
     if (existingUpvote) {
-      // Remove upvote
       await Upvote.findByIdAndDelete(existingUpvote._id);
 
-      // Decrement upvote count
       await Product.findByIdAndUpdate(id, {
         $inc: { upvoteCount: -1 },
       });
@@ -242,7 +238,7 @@ export const toggleUpvote = async (req, res) => {
 
       message = "Product upvoted successfully";
       isUpvoted = true;
-    } // Return simple response for real-time updates
+    }
     res.status(200).json({
       success: true,
       message,
@@ -252,15 +248,6 @@ export const toggleUpvote = async (req, res) => {
     });
   } catch (error) {
     console.error("Toggle upvote error:", error);
-
-    // Handle duplicate key error (in case of race condition)
-    if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        message: "You have already upvoted this product",
-      });
-    }
-
     res.status(500).json({
       success: false,
       message: "Server error while toggling upvote",
@@ -272,7 +259,6 @@ export const getUserProducts = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Check if user exists
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({
@@ -281,7 +267,6 @@ export const getUserProducts = async (req, res) => {
       });
     }
 
-    // Get all user's products without pagination
     const products = await Product.find({
       submittedBy: userId,
       status: "approved",
@@ -361,7 +346,6 @@ export const getUserUpvotedProducts = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Check if user exists
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({
@@ -370,7 +354,6 @@ export const getUserUpvotedProducts = async (req, res) => {
       });
     }
 
-    // Get all upvoted products by the user
     const upvotes = await Upvote.find({ user: userId })
       .populate({
         path: "product",
@@ -383,7 +366,6 @@ export const getUserUpvotedProducts = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    // Filter out null products (in case some were deleted or not approved)
     const upvotedProducts = upvotes
       .filter((upvote) => upvote.product)
       .map((upvote) => upvote.product);

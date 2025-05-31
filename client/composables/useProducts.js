@@ -155,7 +155,7 @@ export const useProducts = () => {
       console.error("Fetch categories error:", err);
       return [];
     }
-  }; // Toggle upvote for a product (requires authentication)
+  };
   const toggleUpvote = async (productId) => {
     try {
       const response = await $fetch(`/api/products/${productId}/upvote`, {
@@ -163,61 +163,7 @@ export const useProducts = () => {
       });
 
       if (response.success) {
-        const isUpvoted = response.data.isUpvoted;
-        const { user } = useAuth();
-        const currentUserId = user.value?.id;
-
-        // Helper function to update product upvote data
-        const updateProductUpvotes = (product) => {
-          if (!product) return;
-
-          // Update upvote count based on server response
-          if (isUpvoted) {
-            product.upvoteCount += 1;
-            // Add current user to upvotes array for UI state
-            if (!product.upvotes) product.upvotes = [];
-            const existingUpvote = product.upvotes.find((upvote) => {
-              const upvoteUserId =
-                typeof upvote.user === "object" ? upvote.user._id : upvote.user;
-              return upvoteUserId === currentUserId;
-            });
-            if (!existingUpvote) {
-              product.upvotes.push({
-                user: currentUserId,
-                createdAt: new Date().toISOString(),
-              });
-            }
-          } else {
-            product.upvoteCount -= 1;
-            // Remove current user from upvotes array for UI state
-            if (product.upvotes) {
-              product.upvotes = product.upvotes.filter((upvote) => {
-                const upvoteUserId =
-                  typeof upvote.user === "object"
-                    ? upvote.user._id
-                    : upvote.user;
-                return upvoteUserId !== currentUserId;
-              });
-            }
-          }
-        };
-
-        // Update in allProducts array
-        const allProductIndex = allProducts.value.findIndex(
-          (p) => p._id === productId
-        );
-        if (allProductIndex !== -1) {
-          updateProductUpvotes(allProducts.value[allProductIndex]);
-        }
-
-        // Update in filteredProducts array
-        const filteredProductIndex = filteredProducts.value.findIndex(
-          (p) => p._id === productId
-        );
-        if (filteredProductIndex !== -1) {
-          updateProductUpvotes(filteredProducts.value[filteredProductIndex]);
-        }
-
+        await fetchProducts();
         return response.data;
       } else {
         throw new Error(response.message || "Failed to toggle upvote");
@@ -227,7 +173,7 @@ export const useProducts = () => {
       throw err;
     }
   };
-  // Compute categories from products for filtering
+
   const categories = computed(() => {
     const categoryMap = {};
 
@@ -249,7 +195,7 @@ export const useProducts = () => {
 
   return {
     // State
-    products: readonly(filteredProducts), // Return filtered products for display
+    products: readonly(filteredProducts),
     allProducts: readonly(allProducts),
     filteredProducts: readonly(filteredProducts),
     isLoading: readonly(isLoading),

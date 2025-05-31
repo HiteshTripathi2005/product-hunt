@@ -35,7 +35,6 @@ const commentSchema = new mongoose.Schema(
   }
 );
 
-// Index for better performance
 commentSchema.index({ product: 1, createdAt: -1 });
 commentSchema.index({ author: 1 });
 commentSchema.index({ parentComment: 1 });
